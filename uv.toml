@@ -1,0 +1,6 @@
+# uv.toml - 正确格式
+[[index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
+
+timeout = 300
