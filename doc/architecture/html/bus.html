@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot · 消息总线</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            nano: {
+              bg: '#0b1220', surface: '#0f172a', card: '#1e293b',
+              border: '#334155', muted: '#94a3b8', text: '#e2e8f0',
+              accent: '#38bdf8', accent2: '#818cf8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+  </script>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body class="bg-nano-bg text-nano-text">
+  <div class="flex min-h-screen">
+    <aside class="w-64 border-r border-nano-border bg-nano-surface/60 backdrop-blur fixed h-full overflow-y-auto">
+      <div class="p-5">
+        <h2 class="text-lg font-bold tracking-tight text-nano-text">nanobot<br/><span class="text-nano-accent text-sm font-normal">架构文档</span></h2>
+      </div>
+      <nav class="px-3 space-y-1 text-sm">
+        <a href="index.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">总览</a>
+        <a href="bus.html" class="nav-link active block rounded px-3 py-2 text-nano-accent font-medium">消息总线</a>
+        <a href="loop.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">AgentLoop</a>
+        <a href="runner.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">AgentRunner</a>
+        <a href="tools.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">工具体系</a>
+        <a href="session.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">会话管理</a>
+        <a href="providers.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">Provider</a>
+        <a href="channels.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">渠道接入</a>
+        <a href="config.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">配置体系</a>
+        <a href="security.html" class="nav-link block rounded px-3 py-2 text-nano-muted hover:text-nano-text">安全边界</a>
+      </nav>
+    </aside>
+
+    <main class="flex-1 ml-64">
+      <div class="max-w-5xl mx-auto px-8 py-12">
+        <h1 class="text-4xl font-bold tracking-tight mb-2">消息总线与渠道接入</h1>
+        <p class="text-nano-muted text-lg mb-10">MessageBus + Channel 负责解耦消息来源与 Agent 核心处理。</p>
+
+        <div class="mermaid mb-10">
+flowchart LR
+    subgraph Sources["消息来源"]
+        T[Telegram]
+        D[Discord]
+        S[Slack]
+        F[Feishu]
+        W[WebSocket]
+        C[CLI]
+    end
+
+    subgraph Core["核心处理"]
+        MQ[MessageBus]
+        AL[AgentLoop]
+        AR[AgentRunner]
+    end
+
+    Sources -->|InboundMessage| MQ
+    MQ -->|dequeue| AL
+    AL --> AR
+    AR -->|OutboundMessage| MQ
+    MQ -->|deliver| Sources
+        </div>
+
+        <h2 class="text-2xl font-bold mt-12 mb-4">模块职责</h2>
+        <div class="overflow-hidden border border-nano-border rounded-xl">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-nano-card text-nano-muted">
+              <tr>
+                <th class="px-4 py-3">模块</th>
+                <th class="px-4 py-3">职责</th>
+                <th class="px-4 py-3">关键接口</th>
+                <th class="px-4 py-3">模式</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-nano-border">
+              <tr>
+                <td class="px-4 py-3 font-medium">MessageBus</td>
+                <td class="px-4 py-3 text-nano-muted">异步 inbound/outbound 队列，解耦生产消费</td>
+                <td class="px-4 py-3 text-nano-muted">publish_inbound / consume_inbound / publish_outbound / consume_outbound</td>
+                <td class="px-4 py-3"><span class="px-2 py-1 rounded bg-nano-card border border-nano-border text-nano-accent text-xs">发布订阅</span></td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">BaseChannel</td>
+                <td class="px-4 py-3 text-nano-muted">把外部平台事件映射为 InboundMessage</td>
+                <td class="px-4 py-3 text-nano-muted">on_event / deliver / start / stop</td>
+                <td class="px-4 py-3"><span class="px-2 py-1 rounded bg-nano-card border border-nano-border text-nano-accent2 text-xs">策略</span></td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-medium">ChannelManager</td>
+                <td class="px-4 py-3 text-nano-muted">渠道发现、生命周期、事件分发</td>
+                <td class="px-4 py-3 text-nano-muted">register / start_all / stop_all</td>
+                <td class="px-4 py-3"><span class="px-2 py-1 rounded bg-nano-card border border-nano-border text-nano-accent text-xs">工厂</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="mt-16 text-xs text-nano-muted border-t border-nano-border pt-6">
+          nanobot 架构文档 · 基于源码生成 · doc/architecture/html
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot - AgentLoop 引擎</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #222240;
+      --border: #2a2a4a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9999b8;
+      --text-muted: #666688;
+      --accent-blue: #4f8ff7;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text-primary);
+    }
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
+      text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg-card); color: var(--text-primary); }
+
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 96px 2rem 4rem; }
+
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+
+    .diagram-container {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; overflow-x: auto; position: relative;
+    }
+    .diagram-container .diagram-label {
+      position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem; color: var(--text-muted);
+      background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .diagram-container pre { margin: 0; }
+    .mermaid { display: flex; justify-content: center; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.75rem;
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; border-radius: 14px 14px 0 0;
+    }
+    .card:hover {
+      border-color: rgba(79, 143, 247, 0.3); transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .card p { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; }
+    .card .tech-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 1rem; }
+    .tech-tag {
+      font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05); color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace; border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .card-blue::before { background: linear-gradient(135deg, #4f8ff7, #8b5cf6); }
+    .card-blue .card-icon { background: rgba(79, 143, 247, 0.15); }
+    .card-green::before { background: linear-gradient(135deg, #22c55e, #06b6d4); }
+    .card-green .card-icon { background: rgba(34, 197, 94, 0.15); }
+    .card-orange::before { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .card-orange .card-icon { background: rgba(245, 158, 11, 0.15); }
+    .card-purple::before { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+    .card-purple .card-icon { background: rgba(139, 92, 246, 0.15); }
+    .card-cyan::before { background: linear-gradient(135deg, #06b6d4, #22c55e); }
+    .card-cyan .card-icon { background: rgba(6, 182, 212, 0.15); }
+    .card-red::before { background: linear-gradient(135deg, #ef4444, #f59e0b); }
+    .card-red .card-icon { background: rgba(239, 68, 68, 0.15); }
+
+    .footer {
+      text-align: center; padding: 3rem 0; border-top: 1px solid var(--border); margin-top: 4rem;
+    }
+    .footer p { color: var(--text-muted); font-size: 0.8rem; }
+
+    @media (max-width: 768px) {
+      .main-content { padding: 80px 1rem 2rem; }
+      .nav-links { display: none; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">🤖</span>
+      <span>nanobot Modules</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">🏠 总览</a>
+      <a href="loop.html" class="active">🔄 AgentLoop</a>
+      <a href="runner.html">⚡ Runner</a>
+      <a href="tools.html">🛠️ Tools</a>
+      <a href="session.html">💾 Session</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div style="text-align:center;padding:2rem 0 3rem;">
+      <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:0.75rem;background:linear-gradient(135deg,#e8e8f0,#9999b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">🔄 AgentLoop 引擎</h1>
+      <p style="color:var(--text-secondary);font-size:1.1rem;">单次消息的编排入口，管理 session、context、hooks、outbound</p>
+    </div>
+
+    <!-- State Machine -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(139,92,246,0.15);">🔄</div>
+        <h2>Turn 状态机</h2>
+        <p>Turn State Machine</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">TurnState Flow</span>
+        <pre class="mermaid">
+stateDiagram-v2
+    [*] --> RESTORE
+    RESTORE --> COMPACT: ok
+    COMPACT --> COMMAND: ok
+    COMMAND --> BUILD: dispatch
+    COMMAND --> DONE: shortcut
+    BUILD --> RUN: ok
+    RUN --> SAVE: ok
+    SAVE --> RESPOND: ok
+    RESPOND --> DONE: ok
+        </pre>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card-purple">
+          <div class="card-icon">📂</div>
+          <h3>RESTORE</h3>
+          <p>从 SessionManager 加载历史消息，恢复上下文状态。读取 JSONL 文件，解析消息列表。</p>
+          <div class="tech-tags"><span class="tech-tag">SessionManager</span><span class="tech-tag">JSONL</span></div>
+        </div>
+        <div class="card card-blue">
+          <div class="card-icon">🗜️</div>
+          <h3>COMPACT</h3>
+          <p>上下文压缩。当消息数或 token 数超过阈值时，自动压缩旧消息，保留近期上下文。</p>
+          <div class="tech-tags"><span class="tech-tag">AutoCompact</span><span class="tech-tag">TTL</span></div>
+        </div>
+        <div class="card card-green">
+          <div class="card-icon">⚡</div>
+          <h3>COMMAND</h3>
+          <p>检查斜杠命令。通过 CommandRouter 解析用户输入中的命令，短路执行或继续正常流程。</p>
+          <div class="tech-tags"><span class="tech-tag">CommandRouter</span><span class="tech-tag">Slash</span></div>
+        </div>
+        <div class="card card-orange">
+          <div class="card-icon">🔨</div>
+          <h3>BUILD</h3>
+          <p>构建完整上下文。ContextBuilder 组装 system prompt、历史消息、skills、memory 片段。</p>
+          <div class="tech-tags"><span class="tech-tag">ContextBuilder</span><span class="tech-tag">Prompt</span></div>
+        </div>
+        <div class="card card-cyan">
+          <div class="card-icon">▶️</div>
+          <h3>RUN</h3>
+          <p>执行阶段。创建 AgentRunSpec，调用 AgentRunner.run()，启动 LLM 执行循环。</p>
+          <div class="tech-tags"><span class="tech-tag">AgentRunner</span><span class="tech-tag">LLM</span></div>
+        </div>
+        <div class="card card-red">
+          <div class="card-icon">💾</div>
+          <h3>SAVE / RESPOND</h3>
+          <p>SAVE：SessionManager.save_turn() 持久化本轮对话。RESPOND：通过 MessageBus 发布 outbound 消息。</p>
+          <div class="tech-tags"><span class="tech-tag">Session</span><span class="tech-tag">Outbound</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Responsibilities -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(79,143,247,0.15);">🧩</div>
+        <h2>核心职责</h2>
+        <p>Core Responsibilities</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">AgentLoop Architecture</span>
+        <pre class="mermaid">
+flowchart TB
+    subgraph AgentLoop["AgentLoop 编排层"]
+        direction TB
+        A[接收 InboundMessage] --> B[加载/创建 Session]
+        B --> C[构建 Context]
+        C --> D[执行 AgentRunner]
+        D --> E[持久化 Session]
+        E --> F[发布 OutboundMessage]
+    end
+
+    subgraph ContextBuilder["ContextBuilder"]
+        CB1[System Prompt]
+        CB2[历史消息]
+        CB3[Skills]
+        CB4[Memory 片段]
+    end
+
+    subgraph AgentRunner["AgentRunner 执行层"]
+        AR1[Provider.chat]
+        AR2[Tool 循环]
+        AR3[Streaming]
+    end
+
+    subgraph Hooks["AgentHook 生命周期"]
+        H1[before_run]
+        H2[on_tool]
+        H3[after_run]
+    end
+
+    C --> ContextBuilder
+    D --> AgentRunner
+    AgentLoop --> Hooks
+
+    style AgentLoop fill:#1a2744,stroke:#4f8ff7,stroke-width:2px,color:#e8e8f0
+    style ContextBuilder fill:#2a1a3e,stroke:#8b5cf6,stroke-width:1px,color:#e8e8f0
+    style AgentRunner fill:#33291a,stroke:#f59e0b,stroke-width:1px,color:#e8e8f0
+    style Hooks fill:#1a3327,stroke:#22c55e,stroke-width:1px,color:#e8e8f0
+        </pre>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card-blue">
+          <div class="card-icon">🔧</div>
+          <h3>ContextBuilder</h3>
+          <p>组装完整上下文。合并 system prompt、历史消息、skills 定义、memory 片段，生成发送给 Provider 的 messages 列表。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">build()</span>
+            <span class="tech-tag">System Prompt</span>
+            <span class="tech-tag">History</span>
+          </div>
+        </div>
+        <div class="card card-purple">
+          <div class="card-icon">🪝</div>
+          <h3>AgentHook</h3>
+          <p>生命周期钩子系统。支持 before_run / after_run / on_tool / on_error 等钩子，CompositeHook 支持多钩子组合。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">CompositeHook</span>
+            <span class="tech-tag">Lifecycle</span>
+            <span class="tech-tag">Extensible</span>
+          </div>
+        </div>
+        <div class="card card-green">
+          <div class="card-icon">📊</div>
+          <h3>ProgressHook</h3>
+          <p>进度回调。将 AgentRunner 的 streaming 增量转换为前端可展示的进度事件，支持实时渲染。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">ProgressEvent</span>
+            <span class="tech-tag">Streaming</span>
+            <span class="tech-tag">Real-time</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Interfaces -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(6,182,212,0.15);">📡</div>
+        <h2>关键接口</h2>
+        <p>Key Interfaces</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Interface Overview</span>
+        <pre class="mermaid">
+classDiagram
+    class AgentLoop {
+        +process_direct(message, session_key) OutboundMessage
+        +start() None
+        +from_config(config) AgentLoop
+        -_TRANSITIONS dict
+        -run_turn(msg, session)
+    }
+
+    class TurnContext {
+        +msg InboundMessage
+        +session_key str
+        +state TurnState
+        +history list
+        +tools ToolRegistry
+        +on_progress Callable
+    }
+
+    class TurnState {
+        <<enumeration>>
+        RESTORE
+        COMPACT
+        COMMAND
+        BUILD
+        RUN
+        SAVE
+        RESPOND
+        DONE
+    }
+
+    class ContextBuilder {
+        +build(messages, workspace, skills) list
+        +render_template(name, ctx) str
+    }
+
+    class AgentHook {
+        <<abstract>>
+        +before_run(ctx)
+        +after_run(ctx, result)
+        +on_tool(ctx, tool, args)
+    }
+
+    AgentLoop --> TurnContext
+    AgentLoop --> TurnState
+    AgentLoop --> ContextBuilder
+    AgentLoop --> AgentHook
+        </pre>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>🤖 nanobot AgentLoop · Generated with Mermaid.js</p>
+      <p style="margin-top:0.5rem;"><a href="index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回总览</a></p>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#1a1a2e',
+        primaryTextColor: '#e8e8f0',
+        primaryBorderColor: '#4f8ff7',
+        lineColor: '#666688',
+        secondaryColor: '#2a2a4a',
+        tertiaryColor: '#1a1a2e',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '13px',
+        clusterBkg: '#12121a',
+        clusterBorder: '#2a2a4a',
+        titleColor: '#e8e8f0',
+        edgeLabelBackground: '#1a1a2e',
+      },
+      flowchart: { htmlLabels: true, curve: 'basis', padding: 15 },
+      stateDiagram: { useMaxWidth: true },
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot - 渠道接入</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #222240;
+      --border: #2a2a4a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9999b8;
+      --text-muted: #666688;
+      --accent-blue: #4f8ff7;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text-primary);
+    }
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
+      text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg-card); color: var(--text-primary); }
+
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 96px 2rem 4rem; }
+
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+
+    .diagram-container {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; overflow-x: auto; position: relative;
+    }
+    .diagram-container .diagram-label {
+      position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem; color: var(--text-muted);
+      background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .diagram-container pre { margin: 0; }
+    .mermaid { display: flex; justify-content: center; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.75rem;
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; border-radius: 14px 14px 0 0;
+    }
+    .card:hover {
+      border-color: rgba(79, 143, 247, 0.3); transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .card p { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; }
+    .card .tech-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 1rem; }
+    .tech-tag {
+      font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05); color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace; border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .card-blue::before { background: linear-gradient(135deg, #4f8ff7, #8b5cf6); }
+    .card-blue .card-icon { background: rgba(79, 143, 247, 0.15); }
+    .card-green::before { background: linear-gradient(135deg, #22c55e, #06b6d4); }
+    .card-green .card-icon { background: rgba(34, 197, 94, 0.15); }
+    .card-orange::before { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .card-orange .card-icon { background: rgba(245, 158, 11, 0.15); }
+    .card-purple::before { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+    .card-purple .card-icon { background: rgba(139, 92, 246, 0.15); }
+    .card-cyan::before { background: linear-gradient(135deg, #06b6d4, #22c55e); }
+    .card-cyan .card-icon { background: rgba(6, 182, 212, 0.15); }
+    .card-red::before { background: linear-gradient(135deg, #ef4444, #f59e0b); }
+    .card-red .card-icon { background: rgba(239, 68, 68, 0.15); }
+
+    .footer {
+      text-align: center; padding: 3rem 0; border-top: 1px solid var(--border); margin-top: 4rem;
+    }
+    .footer p { color: var(--text-muted); font-size: 0.8rem; }
+
+    @media (max-width: 768px) {
+      .main-content { padding: 80px 1rem 2rem; }
+      .nav-links { display: none; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">🤖</span>
+      <span>nanobot Modules</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">🏠 总览</a>
+      <a href="loop.html">🔄 AgentLoop</a>
+      <a href="runner.html">⚡ Runner</a>
+      <a href="tools.html">🛠️ Tools</a>
+      <a href="channels.html" class="active">💬 Channels</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div style="text-align:center;padding:2rem 0 3rem;">
+      <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:0.75rem;background:linear-gradient(135deg,#e8e8f0,#9999b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">💬 渠道接入</h1>
+      <p style="color:var(--text-secondary);font-size:1.1rem;">多渠道接入层，将外部平台消息统一转换为 InboundMessage</p>
+    </div>
+
+    <!-- Channel Architecture -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(6,182,212,0.15);">🏗️</div>
+        <h2>渠道架构</h2>
+        <p>Channel Architecture</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Channel System</span>
+        <pre class="mermaid">
+flowchart TB
+    subgraph External["外部平台"]
+        TG[Telegram]
+        DC[Discord]
+        SL[Slack]
+        FS[Feishu]
+        WS[WebSocket]
+        CLI[CLI]
+    end
+
+    subgraph ChannelLayer["Channel 层"]
+        Base[BaseChannel<br/>抽象基类]
+        Mgr[ChannelManager<br/>生命周期管理]
+    end
+
+    subgraph Bus["MessageBus"]
+        InQ[inbound queue]
+        OutQ[outbound queue]
+    end
+
+    subgraph Agent["Agent 核心"]
+        Loop[AgentLoop]
+    end
+
+    External -->|事件| Base
+    Base -->|publish_inbound| InQ
+    InQ -->|dequeue| Loop
+    Loop -->|publish_outbound| OutQ
+    OutQ -->|deliver| Base
+    Base -->|响应| External
+
+    Mgr -->|start/stop| Base
+
+    style External fill:#1a2744,stroke:#4f8ff7,stroke-width:1px,color:#e8e8f0
+    style ChannelLayer fill:#2a1a3e,stroke:#8b5cf6,stroke-width:2px,color:#e8e8f0
+    style Bus fill:#1a3327,stroke:#22c55e,stroke-width:2px,color:#e8e8f0
+    style Agent fill:#33291a,stroke:#f59e0b,stroke-width:1px,color:#e8e8f0
+        </pre>
+      </div>
+    </div>
+
+    <!-- Built-in Channels -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(34,197,94,0.15);">📡</div>
+        <h2>内置渠道</h2>
+        <p>Built-in Channels</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card-blue">
+          <div class="card-icon">💻</div>
+          <h3>CLI</h3>
+          <p>命令行交互模式。支持 streaming 输出、prompt_toolkit 历史、Markdown 渲染。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Typer</span>
+            <span class="tech-tag">Prompt</span>
+            <span class="tech-tag">Streaming</span>
+          </div>
+        </div>
+        <div class="card card-green">
+          <div class="card-icon">🖥️</div>
+          <h3>WebSocket / WebUI</h3>
+          <p>WebSocket 多路复用协议。承载聊天、媒体、进度、命令，前端 React SPA 通过 WS 通信。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">WebSocket</span>
+            <span class="tech-tag">React</span>
+            <span class="tech-tag">Multiplex</span>
+          </div>
+        </div>
+        <div class="card card-cyan">
+          <div class="card-icon">✈️</div>
+          <h3>Telegram</h3>
+          <p>Telegram Bot API。支持 polling / webhook，消息格式转换，Markdown 渲染。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Bot API</span>
+            <span class="tech-tag">Polling</span>
+            <span class="tech-tag">Webhook</span>
+          </div>
+        </div>
+        <div class="card card-orange">
+          <div class="card-icon">🎮</div>
+          <h3>Discord</h3>
+          <p>Discord Bot + Gateway。支持频道消息、DM、Slash 命令、交互式组件。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Gateway</span>
+            <span class="tech-tag">Slash</span>
+            <span class="tech-tag">Interactions</span>
+          </div>
+        </div>
+        <div class="card card-purple">
+          <div class="card-icon">💼</div>
+          <h3>Slack</h3>
+          <p>Slack Bolt SDK。支持事件订阅、交互式组件、线程回复。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Bolt SDK</span>
+            <span class="tech-tag">Events</span>
+            <span class="tech-tag">Threads</span>
+          </div>
+        </div>
+        <div class="card card-red">
+          <div class="card-icon">🐦</div>
+          <h3>Feishu / 飞书</h3>
+          <p>飞书事件订阅。支持卡片消息、机器人对话、富文本渲染、媒体消息。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Event Sub</span>
+            <span class="tech-tag">Card</span>
+            <span class="tech-tag">Rich Text</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discovery -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(139,92,246,0.15);">🔍</div>
+        <h2>渠道发现机制</h2>
+        <p>Channel Discovery</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Discovery Flow</span>
+        <pre class="mermaid">
+flowchart LR
+    Start[启动] --> Scan[pkgutil 扫描]
+    Start --> Entry[entry_points 插件]
+    Scan --> Builtin[内置 Channels]
+    Entry --> Plugin[第三方 Channels]
+    Builtin --> Register[ChannelManager.register]
+    Plugin --> Register
+    Register --> Init[初始化 Channel]
+    Init --> Start[channel.start()]
+    Start --> Ready[等待外部事件]
+
+    style Start fill:#1a2744,stroke:#4f8ff7,stroke-width:2px,color:#e8e8f0
+    style Register fill:#1a3327,stroke:#22c55e,stroke-width:1px,color:#e8e8f0
+    style Ready fill:#33291a,stroke:#f59e0b,stroke-width:1px,color:#e8e8f0
+        </pre>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card-purple">
+          <div class="card-icon">📦</div>
+          <h3>内置扫描</h3>
+          <p>pkgutil 遍历 nanobot/channels/ 目录，自动发现所有 BaseChannel 实现。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">pkgutil</span>
+            <span class="tech-tag">Auto-Discovery</span>
+          </div>
+        </div>
+        <div class="card card-cyan">
+          <div class="card-icon">🔌</div>
+          <h3>插件入口</h3>
+          <p>通过 setuptools entry_points 发现第三方 channel 插件。支持外部包扩展。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">entry_points</span>
+            <span class="tech-tag">Plugin</span>
+            <span class="tech-tag">Extensible</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>🤖 nanobot Channels · Generated with Mermaid.js</p>
+      <p style="margin-top:0.5rem;"><a href="index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回总览</a></p>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#1a1a2e',
+        primaryTextColor: '#e8e8f0',
+        primaryBorderColor: '#4f8ff7',
+        lineColor: '#666688',
+        secondaryColor: '#2a2a4a',
+        tertiaryColor: '#1a1a2e',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '13px',
+        clusterBkg: '#12121a',
+        clusterBorder: '#2a2a4a',
+        titleColor: '#e8e8f0',
+        edgeLabelBackground: '#1a1a2e',
+      },
+      flowchart: { htmlLabels: true, curve: 'basis', padding: 15 },
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot - 安全边界</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #222240;
+      --border: #2a2a4a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9999b8;
+      --text-muted: #666688;
+      --accent-blue: #4f8ff7;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text-primary);
+    }
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
+      text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg-card); color: var(--text-primary); }
+
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 96px 2rem 4rem; }
+
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+
+    .diagram-container {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; overflow-x: auto; position: relative;
+    }
+    .diagram-container .diagram-label {
+      position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem; color: var(--text-muted);
+      background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .diagram-container pre { margin: 0; }
+    .mermaid { display: flex; justify-content: center; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.75rem;
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; border-radius: 14px 14px 0 0;
+    }
+    .card:hover {
+      border-color: rgba(79, 143, 247, 0.3); transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .card p { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; }
+    .card .tech-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 1rem; }
+    .tech-tag {
+      font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05); color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace; border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .card-blue::before { background: linear-gradient(135deg, #4f8ff7, #8b5cf6); }
+    .card-blue .card-icon { background: rgba(79, 143, 247, 0.15); }
+    .card-green::before { background: linear-gradient(135deg, #22c55e, #06b6d4); }
+    .card-green .card-icon { background: rgba(34, 197, 94, 0.15); }
+    .card-orange::before { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .card-orange .card-icon { background: rgba(245, 158, 11, 0.15); }
+    .card-purple::before { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+    .card-purple .card-icon { background: rgba(139, 92, 246, 0.15); }
+    .card-cyan::before { background: linear-gradient(135deg, #06b6d4, #22c55e); }
+    .card-cyan .card-icon { background: rgba(6, 182, 212, 0.15); }
+    .card-red::before { background: linear-gradient(135deg, #ef4444, #f59e0b); }
+    .card-red .card-icon { background: rgba(239, 68, 68, 0.15); }
+
+    .footer {
+      text-align: center; padding: 3rem 0; border-top: 1px solid var(--border); margin-top: 4rem;
+    }
+    .footer p { color: var(--text-muted); font-size: 0.8rem; }
+
+    @media (max-width: 768px) {
+      .main-content { padding: 80px 1rem 2rem; }
+      .nav-links { display: none; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">🤖</span>
+      <span>nanobot Modules</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">🏠 总览</a>
+      <a href="loop.html">🔄 AgentLoop</a>
+      <a href="runner.html">⚡ Runner</a>
+      <a href="tools.html">🛠️ Tools</a>
+      <a href="security.html" class="active">🔒 Security</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div style="text-align:center;padding:2rem 0 3rem;">
+      <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:0.75rem;background:linear-gradient(135deg,#e8e8f0,#9999b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">🔒 安全边界</h1>
+      <p style="color:var(--text-secondary);font-size:1.1rem;">工作区访问控制、Shell 沙箱、网络边界防护、启动安全</p>
+    </div>
+
+    <!-- Security Architecture -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(239,68,68,0.15);">🛡️</div>
+        <h2>安全架构</h2>
+        <p>Security Architecture</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Security Layers</span>
+        <pre class="mermaid">
+flowchart TB
+    subgraph SecurityLayer["security/ 安全层"]
+        WorkspaceAccess[workspace_access.py<br/>工作区访问控制]
+        WorkspacePolicy[workspace_policy.py<br/>工作区策略]
+        Network[network.py<br/>网络安全]
+    end
+
+    subgraph ToolSecurity["工具安全"]
+        Sandbox[sandbox.py<br/>沙箱后端]
+        ShellSec[shell.py<br/>命令执行安全]
+        WebSec[web.py<br/>SSRF 防护]
+    end
+
+    subgraph CLISecurity["CLI 安全"]
+        PTH[PTH 文件保护]
+        Startup[启动安全检查]
+    end
+
+    SecurityLayer --> WorkspaceAccess
+    SecurityLayer --> WorkspacePolicy
+    SecurityLayer --> Network
+
+    ToolSecurity --> Sandbox
+    ToolSecurity --> ShellSec
+    ToolSecurity --> WebSec
+
+    CLISecurity --> PTH
+    CLISecurity --> Startup
+
+    style SecurityLayer fill:#2a1a1a,stroke:#ef4444,stroke-width:2px,color:#e8e8f0
+    style ToolSecurity fill:#1a3327,stroke:#22c55e,stroke-width:1px,color:#e8e8f0
+    style CLISecurity fill:#33291a,stroke:#f59e0b,stroke-width:1px,color:#e8e8f0
+        </pre>
+      </div>
+    </div>
+
+    <!-- Security Boundaries -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(34,197,94,0.15);">🔐</div>
+        <h2>安全边界</h2>
+        <p>Security Boundaries</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card-red">
+          <div class="card-icon">📂</div>
+          <h3>工作区访问控制</h3>
+          <p>WorkspaceScopeResolver 限制工具只能访问授权路径。防止 Agent 越权读写系统文件。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">WorkspaceScopeResolver</span>
+            <span class="tech-tag">Path Restriction</span>
+            <span class="tech-tag">最小权限</span>
+          </div>
+        </div>
+        <div class="card card-orange">
+          <div class="card-icon">💻</div>
+          <h3>Shell 沙箱</h3>
+          <p>exec 工具支持多种沙箱后端：Local（路径映射 + 输出遮蔽）、Docker（容器隔离）、Firecracker（微 VM）。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Docker</span>
+            <span class="tech-tag">Firecracker</span>
+            <span class="tech-tag">Local</span>
+          </div>
+        </div>
+        <div class="card card-cyan">
+          <div class="card-icon">🌐</div>
+          <h3>网络边界</h3>
+          <p>network.py 做 SSRF 防护。Web 工具校验目标 URL，防止内网探测、本地回环攻击。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">SSRF</span>
+            <span class="tech-tag">URL Sanitization</span>
+            <span class="tech-tag">Private IP</span>
+          </div>
+        </div>
+        <div class="card card-purple">
+          <div class="card-icon">🔑</div>
+          <h3>PTH 保护</h3>
+          <p>Python 启动时检查 PTH 文件，防止恶意 .pth 文件劫持导入路径，导致权限提升。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">PTH Guard</span>
+            <span class="tech-tag">Import Security</span>
+            <span class="tech-tag">Startup</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sandbox Architecture -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(6,182,212,0.15);">🏖️</div>
+        <h2>沙箱架构</h2>
+        <p>Sandbox Architecture</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Sandbox System</span>
+        <pre class="mermaid">
+flowchart TB
+    subgraph ExecTool["exec 工具"]
+        ParseCmd[解析命令]
+        CheckPolicy[检查策略]
+        SelectSandbox[选择沙箱后端]
+    end
+
+    subgraph SandboxBackends["沙箱后端"]
+        Local[Local Sandbox<br/>路径映射 + 输出遮蔽]
+        Docker[Docker Sandbox<br/>容器隔离]
+        Firecracker[Firecracker<br/>微 VM]
+    end
+
+    subgraph SecurityChecks["安全检查"]
+        PathCheck[路径越权检查]
+        EnvCheck[环境变量过滤]
+        NetworkCheck[网络访问控制]
+        TimeoutCheck[超时控制]
+    end
+
+    ParseCmd --> CheckPolicy
+    CheckPolicy --> SelectSandbox
+    SelectSandbox --> SandboxBackends
+
+    SandboxBackends --> SecurityChecks
+    SecurityChecks --> Result[执行结果]
+
+    style ExecTool fill:#1a2744,stroke:#4f8ff7,stroke-width:2px,color:#e8e8f0
+    style SandboxBackends fill:#1a3327,stroke:#22c55e,stroke-width:1px,color:#e8e8f0
+    style SecurityChecks fill:#2a1a1a,stroke:#ef4444,stroke-width:1px,color:#e8e8f0
+        </pre>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card-green">
+          <div class="card-icon">🐳</div>
+          <h3>Docker 沙箱</h3>
+          <p>命令在独立容器中执行，限制 CPU/内存/网络。容器销毁后自动清理，不留痕迹。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Container</span>
+            <span class="tech-tag">Resource Limit</span>
+            <span class="tech-tag">Ephemeral</span>
+          </div>
+        </div>
+        <div class="card card-blue">
+          <div class="card-icon">🖥️</div>
+          <h3>Local 沙箱</h3>
+          <p>本地执行但限制在 workspace 路径。使用路径映射和输出遮蔽，防止敏感信息泄露。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Path Mapping</span>
+            <span class="tech-tag">Output Filter</span>
+            <span class="tech-tag">Workspace</span>
+          </div>
+        </div>
+        <div class="card card-purple">
+          <div class="card-icon">🔥</div>
+          <h3>Firecracker</h3>
+          <p>基于 Firecracker 的轻量级微 VM。比 Docker 更快的启动速度，更强的隔离性。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">MicroVM</span>
+            <span class="tech-tag">Fast Boot</span>
+            <span class="tech-tag">Isolation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Files -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(139,92,246,0.15);">📁</div>
+        <h2>关键文件</h2>
+        <p>Key Files</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Security Files</span>
+        <pre class="mermaid">
+graph TB
+    subgraph SecurityDir["security/"]
+        WA[workspace_access.py<br/>WorkspaceScopeResolver]
+        WP[workspace_policy.py<br/>WorkspacePolicy]
+        NW[network.py<br/>NetworkGuard]
+    end
+
+    subgraph AgentTools["agent/tools/"]
+        SB[sandbox.py<br/>SandboxBackend]
+        SH[shell.py<br/>ExecTool]
+        WB[web.py<br/>WebFetch/Search]
+    end
+
+    subgraph CLI["cli/"]
+        SEC[commands.py<br/>PTH Guard]
+    end
+
+    SecurityDir --> WA & WP & NW
+    AgentTools --> SB & SH & WB
+    CLI --> SEC
+
+    WA -->|uses| WP
+    SH -->|uses| SB
+    WB -->|uses| NW
+
+    style SecurityDir fill:#2a1a1a,stroke:#ef4444,stroke-width:2px,color:#e8e8f0
+    style AgentTools fill:#1a3327,stroke:#22c55e,stroke-width:1px,color:#e8e8f0
+    style CLI fill:#33291a,stroke:#f59e0b,stroke-width:1px,color:#e8e8f0
+        </pre>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>🤖 nanobot Security · Generated with Mermaid.js</p>
+      <p style="margin-top:0.5rem;"><a href="index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回总览</a></p>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#1a1a2e',
+        primaryTextColor: '#e8e8f0',
+        primaryBorderColor: '#4f8ff7',
+        lineColor: '#666688',
+        secondaryColor: '#2a2a4a',
+        tertiaryColor: '#1a1a2e',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '13px',
+        clusterBkg: '#12121a',
+        clusterBorder: '#2a2a4a',
+        titleColor: '#e8e8f0',
+        edgeLabelBackground: '#1a1a2e',
+      },
+      flowchart: { htmlLabels: true, curve: 'basis', padding: 15 },
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot - Provider 模型后端</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #222240;
+      --border: #2a2a4a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9999b8;
+      --text-muted: #666688;
+      --accent-blue: #4f8ff7;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text-primary);
+    }
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
+      text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg-card); color: var(--text-primary); }
+
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 96px 2rem 4rem; }
+
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+
+    .diagram-container {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; overflow-x: auto; position: relative;
+    }
+    .diagram-container .diagram-label {
+      position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem; color: var(--text-muted);
+      background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .diagram-container pre { margin: 0; }
+    .mermaid { display: flex; justify-content: center; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.75rem;
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; border-radius: 14px 14px 0 0;
+    }
+    .card:hover {
+      border-color: rgba(79, 143, 247, 0.3); transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .card p { color: var(--text-secondary); font-size: 0.875rem; line-height: 1.7; }
+    .card .tech-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 1rem; }
+    .tech-tag {
+      font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05); color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace; border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .card-blue::before { background: linear-gradient(135deg, #4f8ff7, #8b5cf6); }
+    .card-blue .card-icon { background: rgba(79, 143, 247, 0.15); }
+    .card-green::before { background: linear-gradient(135deg, #22c55e, #06b6d4); }
+    .card-green .card-icon { background: rgba(34, 197, 94, 0.15); }
+    .card-orange::before { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .card-orange .card-icon { background: rgba(245, 158, 11, 0.15); }
+    .card-purple::before { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+    .card-purple .card-icon { background: rgba(139, 92, 246, 0.15); }
+    .card-cyan::before { background: linear-gradient(135deg, #06b6d4, #22c55e); }
+    .card-cyan .card-icon { background: rgba(6, 182, 212, 0.15); }
+    .card-red::before { background: linear-gradient(135deg, #ef4444, #f59e0b); }
+    .card-red .card-icon { background: rgba(239, 68, 68, 0.15); }
+
+    .footer {
+      text-align: center; padding: 3rem 0; border-top: 1px solid var(--border); margin-top: 4rem;
+    }
+    .footer p { color: var(--text-muted); font-size: 0.8rem; }
+
+    @media (max-width: 768px) {
+      .main-content { padding: 80px 1rem 2rem; }
+      .nav-links { display: none; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">🤖</span>
+      <span>nanobot Modules</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">🏠 总览</a>
+      <a href="loop.html">🔄 AgentLoop</a>
+      <a href="runner.html">⚡ Runner</a>
+      <a href="tools.html">🛠️ Tools</a>
+      <a href="providers.html" class="active">🔌 Providers</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div style="text-align:center;padding:2rem 0 3rem;">
+      <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:0.75rem;background:linear-gradient(135deg,#e8e8f0,#9999b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">🔌 Provider 模型后端</h1>
+      <p style="color:var(--text-secondary);font-size:1.1rem;">统一 LLM 后端抽象，支持多种模型服务商自动选择</p>
+    </div>
+
+    <!-- Provider Selection -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(139,92,246,0.15);">🔀</div>
+        <h2>Provider 选择流程</h2>
+        <p>Provider Selection Flow</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Selection Flow</span>
+        <pre class="mermaid">
+flowchart TB
+    Start[开始选择] --> ReadConfig[读取配置]
+    ReadConfig --> CheckExplicit{显式指定<br/>provider?}
+    CheckExplicit -->|yes| UseExplicit[使用指定 Provider]
+    CheckExplicit -->|no| CheckPreset{Preset<br/>provider?}
+
+    CheckPreset -->|yes| UsePreset[使用 Preset Provider]
+    CheckPreset -->|no| CheckKey{API Key<br/>前缀?}
+
+    CheckKey -->|匹配| UseKey[使用 Key 对应 Provider]
+    CheckKey -->|不匹配| CheckBase{api_base<br/>配置?}
+
+    CheckBase -->|本地| UseLocal[本地 Provider]
+    CheckBase -->|远端| CheckGateway{Gateway<br/>可用?}
+
+    CheckGateway -->|yes| UseGateway[Gateway 路由]
+    CheckGateway -->|no| UseDefault[使用默认 OpenAI Compatible]
+
+    UseExplicit --> Create[ProviderFactory.create]
+    UsePreset --> Create
+    UseKey --> Create
+    UseLocal --> Create
+    UseGateway --> Create
+    UseDefault --> Create
+
+    Create --> WrapFallback[包装 FallbackProvider]
+    WrapFallback --> Done[返回 Provider]
+
+    style Start fill:#1a2744,stroke:#4f8ff7,stroke-width:2px,color:#e8e8f0
+    style Create fill:#1a3327,stroke:#22c55e,stroke-width:1px,color:#e8e8f0
+    style Done fill:#33291a,stroke:#f59e0b,stroke-width:1px,color:#e8e8f0
+        </pre>
+      </div>
+    </div>
+
+    <!-- Provider Architecture -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(79,143,247,0.15);">🏗️</div>
+        <h2>Provider 架构</h2>
+        <p>Provider Architecture</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Provider Architecture</span>
+        <pre class="mermaid">
+classDiagram
+    class LLMProvider {
+        <<abstract>>
+        +chat(messages, tools) LLMResponse
+        +stream(messages, tools) AsyncIterator
+        +get_default_model() str
+        +get_context_window(model) int
+    }
+
+    class OpenAICompatProvider {
+        +api_key str
+        +api_base str
+        +default_model str
+        +spec ProviderSpec
+    }
+
+    class AnthropicProvider {
+        +api_key str
+        +api_base str
+        +default_model str
+    }
+
+    class AzureOpenAIProvider {
+        +api_key str
+        +api_base str
+        +default_model str
+    }
+
+    class BedrockProvider {
+        +api_key str
+        +api_base str
+        +region str
+        +profile str
+    }
+
+    class FallbackProvider {
+        +primary LLMProvider
+        +fallbacks list
+        +chat(messages, tools) LLMResponse
+    }
+
+    class ProviderFactory {
+        +create(config, preset) LLMProvider
+        +create_snapshot(config) ProviderSnapshot
+    }
+
+    class ProviderRegistry {
+        +find_by_name(name) ProviderSpec
+        +create_dynamic_spec(name) ProviderSpec
+    }
+
+    LLMProvider <|-- OpenAICompatProvider
+    LLMProvider <|-- AnthropicProvider
+    LLMProvider <|-- AzureOpenAIProvider
+    LLMProvider <|-- BedrockProvider
+    FallbackProvider o-- LLMProvider : wraps
+    ProviderFactory --> LLMProvider : creates
+    ProviderFactory --> ProviderRegistry : uses
+        </pre>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card-blue">
+          <div class="card-icon">🤖</div>
+          <h3>OpenAI Compatible</h3>
+          <p>兼容 OpenAI 接口格式。支持 spec 定制，可适配任何 OpenAI 兼容服务（Ollama、LM Studio、vLLM 等）。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">OpenAI</span>
+            <span class="tech-tag">Ollama</span>
+            <span class="tech-tag">vLLM</span>
+          </div>
+        </div>
+        <div class="card card-orange">
+          <div class="card-icon">🧠</div>
+          <h3>Anthropic</h3>
+          <p>原生 Anthropic Claude 协议。支持 thinking、tool_use、streaming，处理 Claude 特有的消息格式。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Claude</span>
+            <span class="tech-tag">Thinking</span>
+            <span class="tech-tag">Tool Use</span>
+          </div>
+        </div>
+        <div class="card card-cyan">
+          <div class="card-icon">☁️</div>
+          <h3>Azure OpenAI</h3>
+          <p>Azure OpenAI 服务。支持 Azure AD / Key 认证，自动处理 API 版本与 endpoint。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Azure</span>
+            <span class="tech-tag">AD Auth</span>
+            <span class="tech-tag">Enterprise</span>
+          </div>
+        </div>
+        <div class="card card-green">
+          <div class="card-icon">🌿</div>
+          <h3>Bedrock</h3>
+          <p>AWS Bedrock 服务。支持 Claude、Llama、Titan 等模型，通过 AWS SDK 调用。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">AWS</span>
+            <span class="tech-tag">Claude</span>
+            <span class="tech-tag">Llama</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fallback Strategy -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(239,68,68,0.15);">🛡️</div>
+        <h2>Fallback 策略</h2>
+        <p>Fallback Strategy</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">Fallback Flow</span>
+        <pre class="mermaid">
+flowchart LR
+    Request[LLM Request] --> Primary[Primary Provider]
+    Primary -->|Success| Response[返回结果]
+    Primary -->|Error| CheckRetry{可重试?}
+    CheckRetry -->|yes| Retry[重试 Primary]
+    CheckRetry -->|no| Fallback[FallbackProvider]
+    Retry -->|成功| Response
+    Retry -->|失败| Fallback
+    Fallback --> Alt1[备用 Provider 1]
+    Alt1 -->|失败| Alt2[备用 Provider 2]
+    Alt2 -->|失败| Error[返回错误]
+    Alt1 -->|成功| Response
+    Alt2 -->|成功| Response
+
+    style Primary fill:#1a2744,stroke:#4f8ff7,stroke-width:2px,color:#e8e8f0
+    style Fallback fill:#33291a,stroke:#f59e0b,stroke-width:1px,color:#e8e8f0
+    style Response fill:#1a3327,stroke:#22c55e,stroke-width:2px,color:#e8e8f0
+        </pre>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card-red">
+          <div class="card-icon">🔄</div>
+          <h3>自动故障转移</h3>
+          <p>FallbackProvider 包装主 Provider，失败时自动按顺序尝试备用 Provider。支持多级 fallback 配置。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Auto Failover</span>
+            <span class="tech-tag">Multi-Level</span>
+            <span class="tech-tag">Config-Driven</span>
+          </div>
+        </div>
+        <div class="card card-orange">
+          <div class="card-icon">⚡</div>
+          <h3>即时切换</h3>
+          <p>无需修改业务代码，只需在配置中声明 fallback 列表。运行时自动检测主 Provider 健康状态。</p>
+          <div class="tech-tags">
+            <span class="tech-tag">Zero Code</span>
+            <span class="tech-tag">Health Check</span>
+            <span class="tech-tag">Runtime</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>🤖 nanobot Providers · Generated with Mermaid.js</p>
+      <p style="margin-top:0.5rem;"><a href="index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回总览</a></p>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#1a1a2e',
+        primaryTextColor: '#e8e8f0',
+        primaryBorderColor: '#4f8ff7',
+        lineColor: '#666688',
+        secondaryColor: '#2a2a4a',
+        tertiaryColor: '#1a1a2e',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '13px',
+        clusterBkg: '#12121a',
+        clusterBorder: '#2a2a4a',
+        titleColor: '#e8e8f0',
+        edgeLabelBackground: '#1a1a2e',
+      },
+      flowchart: { htmlLabels: true, curve: 'basis', padding: 15 },
+    });
+  </script>
+</body>
+</html>
