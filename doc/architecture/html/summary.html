@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot - 架构汇总</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #222240;
+      --border: #2a2a4a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9999b8;
+      --text-muted: #666688;
+      --accent-blue: #4f8ff7;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text-primary);
+    }
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+    .nav-links a {
+      padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
+      text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg-card); color: var(--text-primary); }
+
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 96px 2rem 4rem; }
+
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+
+    .diagram-container {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; overflow-x: auto; position: relative;
+    }
+    .diagram-container .diagram-label {
+      position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem; color: var(--text-muted);
+      background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .diagram-container pre { margin: 0; }
+    .mermaid { display: flex; justify-content: center; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.5rem;
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+      text-decoration: none; color: inherit; display: block;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; border-radius: 14px 14px 0 0;
+    }
+    .card:hover {
+      border-color: rgba(79, 143, 247, 0.3); transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    .card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; margin-bottom: 0.75rem;
+    }
+    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .card p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
+    .card .card-tag {
+      display: inline-block; margin-top: 0.75rem; font-size: 0.7rem; padding: 0.2rem 0.5rem;
+      border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace; border: 1px solid rgba(255,255,255,0.05);
+    }
+    .card-blue::before { background: linear-gradient(135deg, #4f8ff7, #8b5cf6); }
+    .card-blue .card-icon { background: rgba(79, 143, 247, 0.15); }
+    .card-green::before { background: linear-gradient(135deg, #22c55e, #06b6d4); }
+    .card-green .card-icon { background: rgba(34, 197, 94, 0.15); }
+    .card-orange::before { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .card-orange .card-icon { background: rgba(245, 158, 11, 0.15); }
+    .card-purple::before { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+    .card-purple .card-icon { background: rgba(139, 92, 246, 0.15); }
+    .card-cyan::before { background: linear-gradient(135deg, #06b6d4, #22c55e); }
+    .card-cyan .card-icon { background: rgba(6, 182, 212, 0.15); }
+    .card-red::before { background: linear-gradient(135deg, #ef4444, #f59e0b); }
+    .card-red .card-icon { background: rgba(239, 68, 68, 0.15); }
+
+    .footer {
+      text-align: center; padding: 3rem 0; border-top: 1px solid var(--border); margin-top: 4rem;
+    }
+    .footer p { color: var(--text-muted); font-size: 0.8rem; }
+
+    @media (max-width: 768px) {
+      .main-content { padding: 80px 1rem 2rem; }
+      .nav-links { display: none; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="summary.html" class="nav-logo">
+      <span class="logo-icon">🤖</span>
+      <span>nanobot 架构汇总</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">📂 目录结构</a>
+      <a href="loop.html">🔄 AgentLoop</a>
+      <a href="runner.html">⚡ Runner</a>
+      <a href="tools.html">🛠️ Tools</a>
+      <a href="session.html">💾 Session</a>
+      <a href="providers.html">🔌 Providers</a>
+      <a href="channels.html">💬 Channels</a>
+      <a href="config.html">⚙️ Config</a>
+      <a href="security.html">🔒 Security</a>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div style="text-align:center;padding:2rem 0 3rem;">
+      <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:0.75rem;background:linear-gradient(135deg,#e8e8f0,#9999b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">📊 nanobot 架构汇总</h1>
+      <p style="color:var(--text-secondary);font-size:1.1rem;">轻量级开源 AI Agent 框架 · 模块总览与快速导航</p>
+    </div>
+
+    <!-- Quick Nav -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(79,143,247,0.15);">🧭</div>
+        <h2>快速导航</h2>
+        <p>Quick Navigation</p>
+      </div>
+      <div class="cards-grid">
+        <a href="index.html" class="card card-blue">
+          <div class="card-icon">📂</div>
+          <h3>目录结构</h3>
+          <p>完整项目目录、核心模块地图、集成层架构图</p>
+          <span class="card-tag">index.html</span>
+        </a>
+        <a href="loop.html" class="card card-purple">
+          <div class="card-icon">🔄</div>
+          <h3>AgentLoop</h3>
+          <p>Turn 状态机、8 个状态流转、核心职责、关键接口</p>
+          <span class="card-tag">loop.html</span>
+        </a>
+        <a href="runner.html" class="card card-orange">
+          <div class="card-icon">⚡</div>
+          <h3>AgentRunner</h3>
+          <p>LLM 执行循环、数据结构、错误处理与重试策略</p>
+          <span class="card-tag">runner.html</span>
+        </a>
+        <a href="tools.html" class="card card-cyan">
+          <div class="card-icon">🛠️</div>
+          <h3>工具体系</h3>
+          <p>ToolRegistry 架构、工具分类、执行管线、接口详解</p>
+          <span class="card-tag">tools.html</span>
+        </a>
+        <a href="session.html" class="card card-green">
+          <div class="card-icon">💾</div>
+          <h3>会话管理</h3>
+          <p>JSONL 存储、TTL 压缩、fork、GoalState、接口</p>
+          <span class="card-tag">session.html</span>
+        </a>
+        <a href="providers.html" class="card card-red">
+          <div class="card-icon">🔌</div>
+          <h3>Provider</h3>
+          <p>LLM 后端选择流程、架构、Fallback 策略</p>
+          <span class="card-tag">providers.html</span>
+        </a>
+        <a href="channels.html" class="card card-purple">
+          <div class="card-icon">💬</div>
+          <h3>Channels</h3>
+          <p>多渠道接入、内置渠道、发现机制</p>
+          <span class="card-tag">channels.html</span>
+        </a>
+        <a href="config.html" class="card card-orange">
+          <div class="card-icon">⚙️</div>
+          <h3>Config</h3>
+          <p>Pydantic Schema、配置加载、默认路径</p>
+          <span class="card-tag">config.html</span>
+        </a>
+        <a href="security.html" class="card card-red">
+          <div class="card-icon">🔒</div>
+          <h3>Security</h3>
+          <p>工作区控制、Shell 沙箱、网络边界、PTH 保护</p>
+          <span class="card-tag">security.html</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Architecture Overview -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(139,92,246,0.15);">🏗️</div>
+        <h2>分层架构总览</h2>
+        <p>Architecture Overview</p>
+      </div>
+      <div class="diagram-container">
+        <span class="diagram-label">Layered Architecture</span>
+        <pre class="mermaid">
+graph TB
+    subgraph UI["接入层"]
+        A[CLI] --> B[WebUI]
+        C[Telegram] --> D[Discord]
+        E[Slack] --> F[Feishu]
+        G[QQ/WeChat] --> H[WhatsApp]
+    end
+
+    subgraph BUS["调度层"]
+        I[MessageBus]
+    end
+
+    subgraph ORCH["编排层"]
+        J[AgentLoop]
+        K[ContextBuilder]
+        L[ToolRegistry]
+        M[AgentHook]
+    end
+
+    subgraph EXEC["执行层"]
+        N[AgentRunner]
+        O[LLMProvider]
+        P[Tools]
+    end
+
+    subgraph STORE["存储层"]
+        Q[SessionManager]
+        R[Memory/Dream]
+        S[Config]
+    end
+
+    UI -->|publish_inbound| BUS
+    BUS -->|consume_inbound| ORCH
+    ORCH -->|run_spec| EXEC
+    EXEC -->|save_turn| STORE
+    ORCH -->|publish_outbound| BUS
+    BUS -->|deliver| UI
+        </pre>
+      </div>
+    </div>
+
+    <!-- Core Call Flow -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(34,197,94,0.15);">🔄</div>
+        <h2>核心调用链</h2>
+        <p>Core Call Flow</p>
+      </div>
+      <div class="diagram-container">
+        <span class="diagram-label">Execution Flow</span>
+        <pre class="mermaid">
+flowchart LR
+    C[Channel] -->|InboundMessage| B[MessageBus]
+    B -->|dequeue| L[AgentLoop]
+    L -->|get_or_create| SM[SessionManager]
+    L -->|build| CB[ContextBuilder]
+    L -->|run| R[AgentRunner]
+    R -->|chat| P[Provider]
+    R -->|get / execute| T[ToolRegistry / Tools]
+    R -->|save_turn| SM
+    L -->|consolidate| M[Memory]
+    L -->|OutboundMessage| B
+    B -->|deliver| C
+        </pre>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>🤖 nanobot 架构汇总 · Generated with Mermaid.js</p>
+      <p style="margin-top:0.5rem;">共 10 个模块页面 · 点击上方卡片或导航栏进入详情</p>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#1a1a2e',
+        primaryTextColor: '#e8e8f0',
+        primaryBorderColor: '#4f8ff7',
+        lineColor: '#666688',
+        secondaryColor: '#2a2a4a',
+        tertiaryColor: '#1a1a2e',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '13px',
+        clusterBkg: '#12121a',
+        clusterBorder: '#2a2a4a',
+        titleColor: '#e8e8f0',
+        edgeLabelBackground: '#1a1a2e',
+      },
+      flowchart: { htmlLabels: true, curve: 'basis', padding: 15 },
+    });
+  </script>
+</body>
+</html>
