@@ -51,7 +51,7 @@
       width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
       border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
     }
-    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links { display: flex; gap: 0.25rem; flex-wrap: wrap; }
     .nav-links a {
       padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
       text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
@@ -147,11 +147,17 @@
       <span>nanobot Modules</span>
     </a>
     <div class="nav-links">
-      <a href="index.html">🏠 总览</a>
+      <a href="summary.html">📊 汇总</a>
+      <a href="index.html">📂 目录结构</a>
       <a href="loop.html">🔄 AgentLoop</a>
       <a href="runner.html">⚡ Runner</a>
       <a href="tools.html" class="active">🛠️ Tools</a>
       <a href="session.html">💾 Session</a>
+      <a href="providers.html">🔌 Providers</a>
+      <a href="channels.html">💬 Channels</a>
+      <a href="config.html">⚙️ Config</a>
+      <a href="security.html">🔒 Security</a>
+      <a href="extensions.html">🚀 拓展</a>
     </div>
   </nav>
 
@@ -342,7 +348,7 @@ sequenceDiagram
 
     <div class="footer">
       <p>🤖 nanobot Tools · Generated with Mermaid.js</p>
-      <p style="margin-top:0.5rem;"><a href="index.html" style="color:var(--accent-blue);text-decoration:none;">← 返回总览</a></p>
+      <p style="margin-top:0.5rem;"><a href="summary.html" style="color:var(--accent-blue);text-decoration:none;">← 返回汇总</a></p>
     </div>
   </div>
 
