@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot - 架构文档汇总</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #222240;
+      --border: #2a2a4a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9999b8;
+      --text-muted: #666688;
+      --accent-blue: #4f8ff7;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text-primary);
+    }
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
+      text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg-card); color: var(--text-primary); }
+
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 96px 2rem 4rem; }
+
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+
+    .diagram-container {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; overflow-x: auto; position: relative;
+    }
+    .diagram-container .diagram-label {
+      position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem; color: var(--text-muted);
+      background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .diagram-container pre { margin: 0; }
+    .mermaid { display: flex; justify-content: center; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+      display: block;
+    }
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+    .card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem;
+    }
+    .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .card-body { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+    .card-tag {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(79, 143, 247, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .quick-link {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .quick-link:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+      border-color: var(--accent-blue);
+    }
+
+    .footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="summary.html" class="nav-logo">
+      <div class="logo-icon">🤖</div>
+      <span>nanobot 架构文档</span>
+    </a>
+    <div class="nav-links">
+      <a href="summary.html" class="active">📊 汇总</a>
+      <a href="index.html">📂 目录结构</a>
+      <a href="bus.html">🔄 消息总线</a>
+      <a href="loop.html">⚙️ AgentLoop</a>
+      <a href="runner.html">▶️ Runner</a>
+      <a href="tools.html">🧰 Tools</a>
+      <a href="session.html">💾 Session</a>
+      <a href="providers.html">🔌 Providers</a>
+      <a href="channels.html">📡 Channels</a>
+      <a href="config.html">⚙️ Config</a>
+      <a href="security.html">🔒 Security</a>
+      <a href="extensions.html">🚀 拓展</a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(79, 143, 247, 0.15); color: var(--accent-blue);">📊</div>
+        <h2>架构文档汇总</h2>
+        <p>nanobot 项目 · 核心执行链路与架构速览</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">系统架构总览</span>
+        <div class="mermaid">
+        graph TB
+          A[User<br/>用户] --> B[Channel<br/>渠道接入]
+          B -->|InboundMessage| C[MessageBus<br/>消息总线]
+          C --> D[AgentLoop<br/>Agent 主循环]
+          D --> E[AgentRunner<br/>LLM 对话执行]
+          E --> F[ToolRegistry<br/>工具注册中心]
+          F --> G[Tool Execution<br/>工具执行]
+          G --> E
+          E -->|OutboundMessage| C
+          C -->|Response| B
+          B -->|Reply| A
+
+          subgraph 基础设施
+            H[Session<br/>会话管理]
+            I[Config<br/>配置体系]
+            J[Security<br/>安全边界]
+            K[Memory<br/>记忆系统]
+          end
+
+          D --> H
+          D --> I
+          D --> J
+          D --> K
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);">📑</div>
+        <h2>文档导航</h2>
+        <p>11 个核心页面</p>
+      </div>
+
+      <div class="cards-grid">
+        <a href="index.html" class="card">
+          <div class="card-icon" style="background: rgba(79, 143, 247, 0.15); color: var(--accent-blue);">📂</div>
+          <div class="card-title">目录结构</div>
+          <div class="card-body">项目骨架、模块分层、技术栈总览</div>
+          <div class="card-tag">index.html</div>
+        </a>
+
+        <a href="bus.html" class="card">
+          <div class="card-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green);">🔄</div>
+          <div class="card-title">消息总线</div>
+          <div class="card-body">MessageBus 异步队列、Inbound/Outbound 解耦</div>
+          <div class="card-tag">bus.html</div>
+        </a>
+
+        <a href="loop.html" class="card">
+          <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">⚙️</div>
+          <div class="card-title">AgentLoop</div>
+          <div class="card-body">主循环、上下文构建、Hook 机制</div>
+          <div class="card-tag">loop.html</div>
+        </a>
+
+        <a href="runner.html" class="card">
+          <div class="card-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">▶️</div>
+          <div class="card-title">AgentRunner</div>
+          <div class="card-body">LLM 对话循环、工具调用、流式响应</div>
+          <div class="card-tag">runner.html</div>
+        </a>
+
+        <a href="tools.html" class="card">
+          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">🧰</div>
+          <div class="card-title">工具体系</div>
+          <div class="card-body">文件系统、Shell、Web、MCP 工具</div>
+          <div class="card-tag">tools.html</div>
+        </a>
+
+        <a href="session.html" class="card">
+          <div class="card-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);">💾</div>
+          <div class="card-title">会话管理</div>
+          <div class="card-body">SessionManager、历史压缩、TTL</div>
+          <div class="card-tag">session.html</div>
+        </a>
+
+        <a href="providers.html" class="card">
+          <div class="card-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green);">🔌</div>
+          <div class="card-title">Provider</div>
+          <div class="card-body">LLM 提供方、模型发现、路由策略</div>
+          <div class="card-tag">providers.html</div>
+        </a>
+
+        <a href="channels.html" class="card">
+          <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">📡</div>
+          <div class="card-title">渠道接入</div>
+          <div class="card-body">Telegram、Discord、Slack、微信等</div>
+          <div class="card-tag">channels.html</div>
+        </a>
+
+        <a href="config.html" class="card">
+          <div class="card-icon" style="background: rgba(79, 143, 247, 0.15); color: var(--accent-blue);">⚙️</div>
+          <div class="card-title">配置体系</div>
+          <div class="card-body">Pydantic Schema、环境变量、热加载</div>
+          <div class="card-tag">config.html</div>
+        </a>
+
+        <a href="security.html" class="card">
+          <div class="card-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">🔒</div>
+          <div class="card-title">安全边界</div>
+          <div class="card-body">工作区控制、Shell 沙箱、网络边界、PTH 保护</div>
+          <div class="card-tag">security.html</div>
+        </a>
+
+        <a href="extensions.html" class="card">
+          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">🚀</div>
+          <div class="card-title">能力拓展</div>
+          <div class="card-body">12 个可扩展点：Tool、Channel、Provider、Skill 等</div>
+          <div class="card-tag">extensions.html</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">⚡</div>
+        <h2>快速访问</h2>
+        <p>常用页面直达</p>
+      </div>
+
+      <div class="quick-links">
+        <a href="loop.html" class="quick-link">⚙️ AgentLoop</a>
+        <a href="runner.html" class="quick-link">▶️ Runner</a>
+        <a href="tools.html" class="quick-link">🧰 Tools</a>
+        <a href="session.html" class="quick-link">💾 Session</a>
+        <a href="providers.html" class="quick-link">🔌 Providers</a>
+        <a href="channels.html" class="quick-link">📡 Channels</a>
+        <a href="config.html" class="quick-link">⚙️ Config</a>
+        <a href="security.html" class="quick-link">🔒 Security</a>
+        <a href="extensions.html" class="quick-link">🚀 能力拓展</a>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>nanobot 架构文档 · 基于源码生成 · doc/architecture/html</p>
+    </footer>
+  </main>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+</body>
+</html>

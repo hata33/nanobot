@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot - 目录结构</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #222240;
+      --border: #2a2a4a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9999b8;
+      --text-muted: #666688;
+      --accent-blue: #4f8ff7;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text-primary);
+    }
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
+      text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg-card); color: var(--text-primary); }
+
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 96px 2rem 4rem; }
+
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+
+    .diagram-container {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; overflow-x: auto; position: relative;
+    }
+    .diagram-container .diagram-label {
+      position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem; color: var(--text-muted);
+      background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .diagram-container pre { margin: 0; }
+    .mermaid { display: flex; justify-content: center; }
+
+    .tree-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem 1rem 1.5rem 0;
+      overflow-x: auto;
+    }
+    .tree-wrap ul { list-style: none; padding: 0; margin: 0; }
+    .tree-wrap .t-children { padding-left: 1.6rem; position: relative; }
+    .tree-wrap .t-children::before {
+      content: ''; position: absolute; left: 1rem; top: 0; bottom: 0.65rem;
+      width: 1px; background: var(--border);
+    }
+    .tree-wrap .t-item { position: relative; }
+    .tree-wrap .t-children > .t-item::before {
+      content: ''; position: absolute; left: -0.6rem; top: 1.05rem;
+      width: 0.6rem; height: 1px; background: var(--border);
+    }
+    .t-node {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.3rem 0.6rem; border-radius: 6px; line-height: 1.6;
+      cursor: default; transition: background 0.15s; white-space: nowrap;
+    }
+    .t-node:hover { background: rgba(255,255,255,0.04); }
+    .t-icon {
+      width: 22px; height: 22px; border-radius: 5px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; flex-shrink: 0;
+    }
+    .t-name { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 500; }
+    .t-desc { font-size: 0.75rem; color: var(--text-muted); margin-left: 0.25rem; }
+    .t-root > .t-node .t-name { color: var(--text-primary); font-weight: 700; font-size: 0.9rem; }
+    .t-dir > .t-node .t-name { color: var(--accent-blue); }
+    .t-dir > .t-node .t-icon { background: rgba(79,143,247,0.12); color: var(--accent-blue); }
+    .t-file > .t-node .t-name { color: var(--text-secondary); }
+    .t-file > .t-node .t-icon { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+    .footer {
+      margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border);
+      text-align: center; color: var(--text-muted); font-size: 0.8rem;
+    }
+    .footer a { color: var(--accent-blue); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="summary.html" class="nav-logo">
+      <div class="logo-icon">🤖</div>
+      <span>nanobot 架构文档</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="active">📂 总览</a>
+      <a href="bus.html">🔄 消息总线</a>
+      <a href="loop.html">⚙️ AgentLoop</a>
+      <a href="runner.html">▶️ Runner</a>
+      <a href="tools.html">🛠️ Tools</a>
+      <a href="session.html">💾 Session</a>
+      <a href="providers.html">🔌 Providers</a>
+      <a href="channels.html">💬 Channels</a>
+      <a href="config.html">⚙️ Config</a>
+      <a href="security.html">🔒 Security</a>
+      <a href="extensions.html">🚀 拓展</a>
+      <a href="summary.html">📊 汇总</a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(79, 143, 247, 0.15); color: var(--accent-blue);">📂</div>
+        <h2>目录结构</h2>
+        <p>项目骨架与模块分层</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">模块层级</span>
+        <div class="mermaid">
+        graph TB
+          A["nanobot/"] --> B["agent/<br/>核心 Agent 逻辑"]
+          A --> C["channels/<br/>平台接入"]
+          A --> D["providers/<br/>LLM 后端"]
+          A --> E["session/<br/>会话管理"]
+          A --> F["config/<br/>配置体系"]
+          A --> G["security/<br/>安全边界"]
+          A --> H["skills/<br/>内置 Skills"]
+          A --> I["command/<br/>斜杠命令"]
+          A --> J["bus/<br/>消息总线"]
+          A --> K["api/<br/>HTTP 接口"]
+          A --> L["cli/<br/>CLI 入口"]
+          A --> M["webui/<br/>前端界面"]
+          A --> N["bridge/<br/>桥接服务"]
+        </div>
+      </div>
+
+      <div class="tree-wrap">
+        <ul>
+          <li class="t-item t-root">
+            <div class="t-node">
+              <div class="t-icon" style="background: rgba(79,143,247,0.15); color: var(--accent-blue);">📦</div>
+              <span class="t-name">nanobot/</span>
+              <span class="t-desc">Python 包根目录</span>
+            </div>
+            <ul class="t-children">
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(79,143,247,0.12); color: var(--accent-blue);">📁</div>
+                  <span class="t-name">agent/</span>
+                  <span class="t-desc">核心 Agent 逻辑</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">loop.py</span><span class="t-desc">AgentLoop 主循环</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">runner.py</span><span class="t-desc">LLM 对话执行器</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">subagent.py</span><span class="t-desc">子代理管理</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">cron.py</span><span class="t-desc">定时任务</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">skills.py</span><span class="t-desc">Skills 加载器</span></div></li>
+                  <li class="t-item t-dir">
+                    <div class="t-node"><div class="t-icon">📁</div><span class="t-name">tools/</span><span class="t-desc">工具体系</span></div>
+                    <ul class="t-children">
+                      <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">registry.py</span></div></li>
+                      <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">shell.py</span></div></li>
+                      <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">filesystem.py</span></div></li>
+                      <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">mcp.py</span></div></li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(34,197,94,0.12); color: var(--accent-green);">📁</div>
+                  <span class="t-name">channels/</span>
+                  <span class="t-desc">平台接入</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">base.py</span><span class="t-desc">Channel 基类</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">telegram.py</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">discord.py</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">slack.py</span></div></li>
+                </ul>
+              </li>
+
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(245,158,11,0.12); color: var(--accent-orange);">📁</div>
+                  <span class="t-name">providers/</span>
+                  <span class="t-desc">LLM 后端</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">base.py</span><span class="t-desc">LLMProvider 基类</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">registry.py</span><span class="t-desc">提供方注册表</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">openai.py</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">anthropic.py</span></div></li>
+                </ul>
+              </li>
+
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(6,182,212,0.12); color: var(--accent-cyan);">📁</div>
+                  <span class="t-name">session/</span>
+                  <span class="t-desc">会话管理</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">manager.py</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">goal_state.py</span></div></li>
+                </ul>
+              </li>
+
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(139,92,246,0.12); color: var(--accent-purple);">📁</div>
+                  <span class="t-name">config/</span>
+                  <span class="t-desc">配置体系</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">schema.py</span><span class="t-desc">Pydantic 模型</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">loader.py</span></div></li>
+                </ul>
+              </li>
+
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red);">📁</div>
+                  <span class="t-name">security/</span>
+                  <span class="t-desc">安全边界</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">workspace_access.py</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">sandbox.py</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">network.py</span></div></li>
+                </ul>
+              </li>
+
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(245,158,11,0.12); color: var(--accent-orange);">📁</div>
+                  <span class="t-name">skills/</span>
+                  <span class="t-desc">内置 Skills</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">long-goal/</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">cron/</span></div></li>
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">github/</span></div></li>
+                </ul>
+              </li>
+
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(34,197,94,0.12); color: var(--accent-green);">📁</div>
+                  <span class="t-name">bus/</span>
+                  <span class="t-desc">消息总线</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">queue.py</span></div></li>
+                </ul>
+              </li>
+
+              <li class="t-item t-dir">
+                <div class="t-node">
+                  <div class="t-icon" style="background: rgba(79,143,247,0.12); color: var(--accent-blue);">📁</div>
+                  <span class="t-name">webui/</span>
+                  <span class="t-desc">React 前端</span>
+                </div>
+                <ul class="t-children">
+                  <li class="t-item t-file"><div class="t-node"><div class="t-icon">📄</div><span class="t-name">src/</span></div></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);">🛠️</div>
+        <h2>技术栈</h2>
+        <p>Python + React + Async</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon" style="background: rgba(79, 143, 247, 0.15); color: var(--accent-blue);">🐍</div>
+          <div class="card-title">Python 3.11+</div>
+          <div class="card-body">
+            <p>核心运行时，全面使用 asyncio 异步框架。</p>
+            <ul class="feature-list">
+              <li>asyncio 事件循环</li>
+              <li>Pydantic 配置校验</li>
+              <li>typer CLI 框架</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">⚛️</div>
+          <div class="card-title">React + TypeScript</div>
+          <div class="card-body">
+            <p>WebUI 前端，Vite 构建，WebSocket 实时通信。</p>
+            <ul class="feature-list">
+              <li>React 18 + TypeScript</li>
+              <li>Vite 构建工具</li>
+              <li>WebSocket  multiplex</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);">🔮</div>
+          <div class="card-title">MCP</div>
+          <div class="card-body">
+            <p>Model Context Protocol，标准化工具接口。</p>
+            <ul class="feature-list">
+              <li>stdio / HTTP / SSE</li>
+              <li>自动工具发现</li>
+              <li>多服务并发</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green);">🔄</div>
+          <div class="card-title">消息队列</div>
+          <div class="card-body">
+            <p>异步消息总线，解耦 Channel 与 Agent。</p>
+            <ul class="feature-list">
+              <li>InboundMessage / OutboundMessage</li>
+              <li>自动重试与错误处理</li>
+              <li>多 Channel 并发</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">🗺️</div>
+        <h2>阅读路线图</h2>
+        <p>建议阅读顺序</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">学习路径</span>
+        <div class="mermaid">
+        graph LR
+          A[1. 目录结构<br/>index.html] --> B[2. 消息总线<br/>bus.html]
+          B --> C[3. AgentLoop<br/>loop.html]
+          C --> D[4. Runner<br/>runner.html]
+          D --> E[5. Tools<br/>tools.html]
+          E --> F[6. Session<br/>session.html]
+          F --> G[7. Providers<br/>providers.html]
+          G --> H[8. Channels<br/>channels.html]
+          H --> I[9. Config<br/>config.html]
+          I --> J[10. Security<br/>security.html]
+          J --> K[11. 拓展<br/>extensions.html]
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>nanobot 架构文档 · 基于源码生成 · <a href="summary.html">返回汇总</a></p>
+    </footer>
+  </main>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+</body>
+</html>

@@ -1,4 +1,5 @@
-#!/usr/bin/env pwsh
+# Requires -Version 5.1
+
 <#
 .SYNOPSIS
     加载 .env 中的密钥并启动 nanobot 网关

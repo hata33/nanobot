@@ -49,7 +49,8 @@ class ProviderSpec:
 
     # gateway behavior
     strip_model_prefix: bool = False  # strip "provider/" before sending to gateway
-    strip_model_prefixes: tuple[str, ...] = ()  # strip only when the first model segment matches
+    # strip only when the first model segment matches
+    strip_model_prefixes: tuple[str, ...] = ()
     supports_max_completion_tokens: bool = False
 
     # per-model param overrides, e.g. (("kimi-k2.5", {"temperature": 1.0}),)
@@ -363,7 +364,7 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         display_name="Zhipu AI",
         backend="openai_compat",
         env_extras=(("ZHIPUAI_API_KEY", "{api_key}"),),
-        default_api_base="https://open.bigmodel.cn/api/paas/v4",
+        default_api_base="https://open.bigmodel.cn/api/anthropic",
     ),
     # DashScope (通义): Qwen models, OpenAI-compatible endpoint
     ProviderSpec(
@@ -419,7 +420,8 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
     #     blocks; thinking text gets extracted into reasoning_content.
     ProviderSpec(
         name="mistral",
-        keywords=("mistral", "magistral", "ministral", "codestral", "devstral"),
+        keywords=("mistral", "magistral", "ministral",
+                  "codestral", "devstral"),
         env_key="MISTRAL_API_KEY",
         display_name="Mistral",
         backend="openai_compat",

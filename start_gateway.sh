@@ -12,7 +12,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
 if [ ! -f .env ]; then
-  echo "ERROR: .env not found at $ROOT/.env — create it with DEEPSEEK_API_KEY=..." >&2
+  echo "ERROR: .env not found at $ROOT/.env — create it with ZHIPUAI_API_KEY=..." >&2
   exit 1
 fi
 
@@ -22,8 +22,8 @@ set -a
 . ./.env
 set +a
 
-if [ -z "${DEEPSEEK_API_KEY:-}" ]; then
-  echo "ERROR: DEEPSEEK_API_KEY is empty in $ROOT/.env" >&2
+if [ -z "${ZHIPUAI_API_KEY:-}" ]; then
+  echo "ERROR: ZHIPUAI_API_KEY is empty in $ROOT/.env" >&2
   exit 1
 fi
 

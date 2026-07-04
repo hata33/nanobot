@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nanobot - 能力拓展</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a2e;
+      --bg-card-hover: #222240;
+      --border: #2a2a4a;
+      --text-primary: #e8e8f0;
+      --text-secondary: #9999b8;
+      --text-muted: #666688;
+      --accent-blue: #4f8ff7;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --accent-pink: #ec4899;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--text-primary);
+    }
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #4f8ff7, #8b5cf6);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem; border-radius: 8px; color: var(--text-secondary);
+      text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg-card); color: var(--text-primary); }
+
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 96px 2rem 4rem; }
+
+    .section { margin-bottom: 4rem; }
+    .section-header {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
+
+    .diagram-container {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; overflow-x: auto; position: relative;
+    }
+    .diagram-container .diagram-label {
+      position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem; color: var(--text-muted);
+      background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .diagram-container pre { margin: 0; }
+    .mermaid { display: flex; justify-content: center; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      transition: all 0.2s;
+    }
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .card-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+    }
+    .card-title { font-size: 1.1rem; font-weight: 600; }
+    .card-badge {
+      margin-left: auto;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .card-body { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+    .card-body code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255,255,255,0.06);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    .card-meta {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .card-meta span { display: flex; align-items: center; gap: 0.25rem; }
+
+    .footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+    .footer a { color: var(--accent-blue); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+    .tag-easy { background: rgba(34,197,94,0.15); color: var(--accent-green); }
+    .tag-medium { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
+    .tag-hard { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+
+    ul.feature-list { padding-left: 1.25rem; }
+    ul.feature-list li { margin-bottom: 0.5rem; color: var(--text-secondary); }
+    ul.feature-list li code { font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.06); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <a href="summary.html" class="nav-logo">
+      <div class="logo-icon">🤖</div>
+      <span>nanobot 架构文档</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">📂 总览</a>
+      <a href="bus.html">🔄 消息总线</a>
+      <a href="loop.html">⚙️ AgentLoop</a>
+      <a href="runner.html">▶️ Runner</a>
+      <a href="tools.html">🧰 Tools</a>
+      <a href="session.html">💾 Session</a>
+      <a href="providers.html">🔌 Providers</a>
+      <a href="channels.html">📡 Channels</a>
+      <a href="config.html">⚙️ Config</a>
+      <a href="security.html">🔒 Security</a>
+      <a href="extensions.html" class="active">🚀 拓展</a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">🚀</div>
+        <h2>能力拓展</h2>
+        <p>基于 nanobot 的 12 个扩展点</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">扩展点总览</span>
+        <div class="mermaid">
+        graph TB
+          subgraph 核心["nanobot 核心能力"]
+            A[Tool<br/>工具扩展] --> B[Channel<br/>渠道接入]
+            A --> C[Provider<br/>模型提供方]
+            A --> D[Skill<br/>技能系统]
+            A --> E[Command<br/>命令路由]
+            A --> F[CronJob<br/>定时任务]
+            G[MCP<br/>外部服务] --> A
+            H[SubAgent<br/>子代理] --> A
+            I[Image<br/>图片生成] --> A
+            J[Audio<br/>语音转写] --> A
+            K[Hook<br/>中间件] --> A
+            L[WebUI<br/>前端界面] --> B
+          end
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(79, 143, 247, 0.15); color: var(--accent-blue);">🛠️</div>
+            <div class="card-title">自定义 Tool</div>
+            <span class="card-badge tag-easy">简单</span>
+          </div>
+          <div class="card-body">
+            <p>继承 <code>BaseTool</code>，实现 <code>execute</code> 和 <code>to_schema</code>。自动注册到 <code>ToolRegistry</code>。</p>
+            <ul class="feature-list">
+              <li>文件系统工具已内置</li>
+              <li>Shell 执行受沙箱控制</li>
+              <li>Web 搜索/抓取可用</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/agent/tools/</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);">📡</div>
+            <div class="card-title">自定义 Channel</div>
+            <span class="card-badge tag-medium">中等</span>
+          </div>
+          <div class="card-body">
+            <p>继承 <code>BaseChannel</code>，实现 <code>start/stop/send</code>。外部平台消息转成 <code>InboundMessage</code> 送进消息总线。</p>
+            <ul class="feature-list">
+              <li>Telegram、Discord、Slack 等已内置</li>
+              <li>支持自动发现 + 插件</li>
+              <li>需处理配对/审批逻辑</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/channels/</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green);">🔌</div>
+            <div class="card-title">自定义 Provider</div>
+            <span class="card-badge tag-medium">中等</span>
+          </div>
+          <div class="card-body">
+            <p>继承 <code>LLMProvider</code>，实现 <code>chat/stream</code>。到 <code>ProviderFactory</code> 注册，模型调用自动路由。</p>
+            <ul class="feature-list">
+              <li>OpenAI、Anthropic、Azure 等已内置</li>
+              <li>支持 OpenAI 兼容模式</li>
+              <li>可配置 apiBase、apiKey</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/providers/</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">🧩</div>
+            <div class="card-title">自定义 Skill</div>
+            <span class="card-badge tag-easy">简单</span>
+          </div>
+          <div class="card-body">
+            <p>写 <code>SKILL.md</code>，Agent 自动加载并学习。定义系统 prompt、工具权限、触发条件。</p>
+            <ul class="feature-list">
+              <li>按需激活，不占上下文</li>
+              <li>可读写知识库文件</li>
+              <li>支持 emoji 和元数据</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>workspace/skills/</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">⌨️</div>
+            <div class="card-title">自定义 Command</div>
+            <span class="card-badge tag-easy">简单</span>
+          </div>
+          <div class="card-body">
+            <p>通过 <code>CommandRouter</code> 注册 <code>/xxx</code> 命令。可带参数、权限控制、帮助文本。</p>
+            <ul class="feature-list">
+              <li>斜杠命令自动补全</li>
+              <li>支持子命令和选项</li>
+              <li>可绑定 Skill</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/command/</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">⏰</div>
+            <div class="card-title">Cron Job</div>
+            <span class="card-badge tag-easy">简单</span>
+          </div>
+          <div class="card-body">
+            <p>通过 <code>CronService</code> 增加定时任务。支持 cron 表达式、时区、消息内容。</p>
+            <ul class="feature-list">
+              <li>内置 heartbeat 机制</li>
+              <li>可触发特定 Skill</li>
+              <li>支持一次性/循环任务</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/agent/cron.py</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(236, 72, 153, 0.15); color: var(--accent-pink);">🔗</div>
+            <div class="card-title">MCP Server</div>
+            <span class="card-badge tag-medium">中等</span>
+          </div>
+          <div class="card-body">
+            <p>用内置 MCP 工具或新增工具接入外部能力。支持 stdio / HTTP / SSE 传输。</p>
+            <ul class="feature-list">
+              <li>微软 Learn MCP 已内置</li>
+              <li>可连接自定义 MCP 服务</li>
+              <li>工具自动发现</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/agent/tools/mcp.py</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);">👥</div>
+            <div class="card-title">子代理 / 长任务</div>
+            <span class="card-badge tag-medium">中等</span>
+          </div>
+          <div class="card-body">
+            <p>通过 <code>spawn</code> 或 <code>long_task</code> 扩展多代理协作。支持并发控制和状态追踪。</p>
+            <ul class="feature-list">
+              <li>子代理独立运行</li>
+              <li>支持并发控制</li>
+              <li>可完成长期目标</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/agent/subagent.py</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green);">🎨</div>
+            <div class="card-title">图片生成</div>
+            <span class="card-badge tag-medium">中等</span>
+          </div>
+          <div class="card-body">
+            <p>扩展 Provider 或工具支持新模态。文生图、迭代编辑、多轮生成。</p>
+            <ul class="feature-list">
+              <li>image-generation skill 已内置</li>
+              <li>支持 DALL-E、Stable Diffusion</li>
+              <li>可自定义生成参数</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/providers/image_generation.py</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">🎵</div>
+            <div class="card-title">音频转写</div>
+            <span class="card-badge tag-medium">中等</span>
+          </div>
+          <div class="card-body">
+            <p>扩展 Provider 支持语音识别。Whisper 等模型接入。</p>
+            <ul class="feature-list">
+              <li>transcription skill 已内置</li>
+              <li>支持多语言转写</li>
+              <li>可配置模型和参数</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/providers/transcription.py</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">🪝</div>
+            <div class="card-title">Hook 中间件</div>
+            <span class="card-badge tag-hard">困难</span>
+          </div>
+          <div class="card-body">
+            <p>在 <code>AgentLoop</code> 的 hook 点上插自定义逻辑。可拦截、修改、增强 Agent 行为。</p>
+            <ul class="feature-list">
+              <li>生命周期钩子</li>
+              <li>可修改上下文/工具调用</li>
+              <li>适合做审计、过滤</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>nanobot/agent/loop.py</code></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">🌐</div>
+            <div class="card-title">WebUI 扩展</div>
+            <span class="card-badge tag-hard">困难</span>
+          </div>
+          <div class="card-body">
+            <p>在 <code>webui/</code> 前端增加新页面或组件。React + TypeScript + Vite。</p>
+            <ul class="feature-list">
+              <li>Vite 开发服务器</li>
+              <li>WebSocket 实时通信</li>
+              <li>可自定义主题和布局</li>
+            </ul>
+          </div>
+          <div class="card-meta">
+            <span>📁 <code>webui/src/</code></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);">💡</div>
+        <h2>扩展建议</h2>
+        <p>从简单到复杂的入手顺序</p>
+      </div>
+
+      <div class="diagram-container">
+        <span class="diagram-label">推荐扩展路径</span>
+        <div class="mermaid">
+        graph LR
+          A[1. Skill<br/>写 SKILL.md] --> B[2. Tool<br/>继承 BaseTool]
+          B --> C[3. Command<br/>注册 /xxx]
+          C --> D[4. Cron<br/>定时任务]
+          D --> E[5. Channel<br/>接入新平台]
+          E --> F[6. Provider<br/>新模型后端]
+          F --> G[7. MCP<br/>外部服务]
+          G --> H[8. SubAgent<br/>多代理协作]
+          H --> I[9. Hook<br/>核心中间件]
+          I --> J[10. WebUI<br/>前端定制]
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green);">🎯</div>
+            <div class="card-title">新手起步</div>
+          </div>
+          <div class="card-body">
+            <p>先写几个 Skill，比如：</p>
+            <ul class="feature-list">
+              <li><code>psych-support</code> - 心理陪伴</li>
+              <li><code>weather-reporter</code> - 天气查询</li>
+              <li><code>market-watcher</code> - 美股行情</li>
+            </ul>
+            <p style="margin-top: 0.75rem;">这些只需写 Markdown，不需要改代码，立刻能看到效果。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);">🔧</div>
+            <div class="card-title">进阶开发</div>
+          </div>
+          <div class="card-body">
+            <p>当 Skill 不够用时，开始写 Tool：</p>
+            <ul class="feature-list">
+              <li>封装 Python 库为工具</li>
+              <li>接入新的 API 服务</li>
+              <li>实现自定义数据处理</li>
+            </ul>
+            <p style="margin-top: 0.75rem;">Tool 可以访问文件系统、网络、shell，能力边界更大。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red);">🏗️</div>
+            <div class="card-title">深度定制</div>
+          </div>
+          <div class="card-body">
+            <p>需要改核心架构时：</p>
+            <ul class="feature-list">
+              <li>Channel：接入新的聊天平台</li>
+              <li>Provider：接入新的 LLM 后端</li>
+              <li>Hook：修改 Agent 核心行为</li>
+              <li>WebUI：定制界面体验</li>
+            </ul>
+            <p style="margin-top: 0.75rem;">这些需要理解核心代码，改动影响面大，建议先阅读源码。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-icon" style="background: rgba(79, 143, 247, 0.15); color: var(--accent-blue);">📚</div>
+        <h2>快速参考</h2>
+        <p>关键代码位置</p>
+      </div>
+
+      <div class="diagram-container">
+        <pre style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-secondary);"><code><span style="color: var(--accent-purple);">nanobot/</span>
+├── <span style="color: var(--accent-blue);">agent/</span>
+│   ├── loop.py          # AgentLoop 核心循环
+│   ├── runner.py        # LLM 对话执行器
+│   ├── tools/           # 工具体系
+│   │   ├── registry.py  # 工具注册中心
+│   │   ├── shell.py     # Shell 执行
+│   │   ├── filesystem.py # 文件操作
+│   │   ├── mcp.py       # MCP 客户端
+│   │   └── ...
+│   ├── subagent.py      # 子代理管理
+│   ├── cron.py          # 定时任务
+│   └── skills.py        # Skills 加载器
+├── <span style="color: var(--accent-green);">channels/</span>
+│   ├── base.py          # Channel 基类
+│   ├── telegram.py      # Telegram
+│   ├── discord.py       # Discord
+│   └── ...
+├── <span style="color: var(--accent-orange);">providers/</span>
+│   ├── base.py          # LLMProvider 基类
+│   ├── registry.py      # 提供方注册表
+│   ├── openai.py        # OpenAI
+│   ├── anthropic.py     # Anthropic
+│   └── ...
+├── <span style="color: var(--accent-cyan);">session/</span>
+│   ├── manager.py       # 会话管理
+│   └── goal_state.py    # 长期目标状态
+├── <span style="color: var(--accent-pink);">config/</span>
+│   └── schema.py        # Pydantic 配置模型
+└── <span style="color: var(--text-muted);">cli/</span>
+    └── commands.py      # CLI 入口</code></pre>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>nanobot 架构文档 · 基于源码生成 · <a href="summary.html">返回汇总</a></p>
+    </footer>
+  </main>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+</body>
+</html>
